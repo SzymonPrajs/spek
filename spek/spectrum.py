@@ -1,6 +1,6 @@
 import numpy as np
 import astropy.cosmology
-
+import astropy.units as u
 
 class Spectrum():
     """
@@ -97,8 +97,15 @@ class Spectrum():
             raise TypeError("""cosmology must be of type
                             astropy.cosmology.core.FlatLambdaCDM""")
 
-        self._z = redshift
-        self._lum_distance = self.__cosmology.luminosity_distance(self._z)
+        if float(redshift) < 0:
+            raise ValueError('Redshift must be positive!')
+        else:
+            self._z = redshift
+
+        if self._z == 0:
+            self._lum_distance = 10e-6 * u.Mpc
+        else:
+            self._lum_distance = self.__cosmology.luminosity_distance(self._z)
 
     def load_from_file(self, file_name):
         """
@@ -152,7 +159,10 @@ class Spectrum():
         self._flux /= redshift_shift
         self._z = new_redshift
 
-        new_lum_distance = self.__cosmology.luminosity_distance(new_redshift)
+        if self._z == 0:
+            new_lum_distance = 10e-6 * u.Mpc
+        else:
+            new_lum_distance = self.__cosmology.luminosity_distance(new_redshift)
         distance_factor = (self._lum_distance / new_lum_distance)**2
         self._flux /= distance_factor.value
         self._lum_distance = new_lum_distance

@@ -1,7 +1,7 @@
 import os
 import glob
 import numpy as np
-from scipy import constants as const
+from astropy.constants import c
 
 
 class _Filter():
@@ -27,7 +27,7 @@ class _Filter():
         self.wavelength = filter_data[0]
         self.bandpass = filter_data[1]
         self.area = np.trapz(self.bandpass, x=self.wavelength)
-        jansky = 3631 * 1e-23 * const.c * 1e10 / (self.wavelength)**2
+        jansky = 3631 * 1e-23 * c.value * 1e10 / (self.wavelength)**2
         flux = jansky * self.bandpass
         self.ab_zero_point = -2.5*np.log10(np.trapz(flux, x=self.wavelength) /
                                            self.area)
