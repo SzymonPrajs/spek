@@ -58,27 +58,36 @@ class Spectrum():
         if wavelength is not None:
             try:
                 iter(wavelength)
-                iter(flux)
                 wavelength = np.array(wavelength)
-                flux = np.array(flux)
             except TypeError:
-                print('wavelength and flux values must be 1d array-like')
+                print('wavelength must be 1d array-like')
 
             try:
                 wavelength = wavelength.astype(float)
-                flux = flux.astype(float)
             except ValueError:
-                print('wavelength and flux arrays must numeric')
+                print('wavelength array must numeric')
 
-            if not wavelength.shape == flux.shape:
-                raise ValueError('wavelength and flux must be have same shape')
-
-            if not wavelength.shape[0] == wavelength.size:
-                raise ValueError('wavelength and flux must be 1d arrays')
+            self._wavelength = wavelength
 
         if flux is not None:
-            # TODO: Wrap this into a function and use for flux and wavelength
-            pass
+            try:
+                iter(flux)
+                flux = np.array(flux)
+            except TypeError:
+                print('flux must be 1d array-like')
+
+            try:
+                flux = flux.astype(float)
+            except ValueError:
+                print('flux array must numeric')
+
+            self._flux = flux
+
+        if not self._wavelength.shape == self._flux.shape:
+            raise ValueError('wavelength and flux must be have same shape')
+
+        if not self._wavelength.shape[0] == self._wavelength.size:
+            raise ValueError('wavelength and flux must be 1d arrays')
 
         if cosmology is None:
             self.__cosmology = astropy.cosmology.Planck15
@@ -88,9 +97,8 @@ class Spectrum():
             raise TypeError("""cosmology must be of type
                             astropy.cosmology.core.FlatLambdaCDM""")
 
-        self._wavelength = wavelength
-        self._flux = flux
         self._z = redshift
+        self._lum_distance = self.__cosmology.luminosity_distance(self._z)
 
     def load_from_file(self, file_name):
         """
@@ -143,3 +151,68 @@ class Spectrum():
         self._wavelength *= redshift_shift
         self._flux /= redshift_shift
         self._z = new_redshift
+
+        new_lum_distance = self.__cosmology.luminosity_distance(new_redshift)
+        distance_factor = (self._lum_distance / new_lum_distance)**2
+        self._flux /= distance_factor.value
+        self._lum_distance = new_lum_distance
+
+    def synthesis_photometry(self, filter_names, filters):
+        """
+        Make synthetic photometry from a spectum
+
+        Parameters
+        ----------
+        filter_name : str or array-like
+            Value or an array of names of filters at which the synthetic
+            photometry is to be calculated.
+
+        filters : `spek.Filters`
+            Filters object that must be preloaded with the filters passed as
+            filter_name
+
+        Returns
+        -------
+        synthetic_flux : ndarray
+            Array of synthetic fluxes matching the input filter_name
+        """
+        filter_names = np.array(filter_names)
+        synthetic_flux = np.zeros(filter_names.size)
+
+        for i, flt in enumerate(filter_names):
+            bandpass = np.interp(self._wavelength,
+                                 filters[flt].wavelength,
+                                 filters[flt].bandpass, left=0, right=0)
+            flux = self._flux * bandpass
+            synthetic_flux[i] = (np.trapz(flux, x=self._wavelength) /
+                                 filters[flt].area)
+
+        return synthetic_flux
+
+    def synthesis_magnitudes(self, filter_name, filters):
+        """
+        Calculate synthetic magnitudes for the spectrum using provided filters
+
+        Parameters
+        ----------
+        filter_name : str or array-like
+            Value or an array of names of filters at which the synthetic
+            photometry is to be calculated.
+
+        filters : `spek.Filters`
+            Filters object that must be preloaded with the filters passed as
+            filter_name
+
+        Returns
+        -------
+        synthetic_mag: ndarray
+            Array of synthetic magnitudes matching the input filter_name
+        """
+        synthetic_flux = self.synthesis_photometry(filter_name, filters)
+        synthetic_mag = np.zeros_like(synthetic_flux)
+
+        for i, flt in enumerate(filter_name):
+            synthetic_mag[i] = (-2.5*np.log10(synthetic_flux[i]) -
+                                filters[flt].ab_zero_point)
+
+        return synthetic_mag

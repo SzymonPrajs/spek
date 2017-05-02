@@ -87,3 +87,6 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# Temporary ignore files while in heavy dev period
+test.py
