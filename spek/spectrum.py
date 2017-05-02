@@ -2,6 +2,7 @@ import numpy as np
 import astropy.cosmology
 import astropy.units as u
 
+
 class Spectrum():
     """
     Generic spectrum class
@@ -162,9 +163,9 @@ class Spectrum():
         if self._z == 0:
             new_lum_distance = 10e-6 * u.Mpc
         else:
-            new_lum_distance = self.__cosmology.luminosity_distance(new_redshift)
+            new_lum_distance = self.__cosmology.luminosity_distance(self._z)
         distance_factor = (self._lum_distance / new_lum_distance)**2
-        self._flux /= distance_factor.value
+        self._flux *= distance_factor.value
         self._lum_distance = new_lum_distance
 
     def synthesis_photometry(self, filter_names, filters):
