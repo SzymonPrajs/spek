@@ -77,7 +77,7 @@ class Spectrum():
                 raise ValueError('wavelength and flux must be 1d arrays')
 
         if flux is not None:
-            # Wrap this into a function and do for both flux and wavelength
+            # TODO: Wrap this into a function and use for flux and wavelength
             pass
 
         if cosmology is None:
