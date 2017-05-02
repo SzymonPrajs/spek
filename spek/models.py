@@ -13,21 +13,22 @@ class BlackbodySED(Spectrum):
 
     Parameters
     ----------
-    temperature : float
-        Photospheric temperature of the object. Value must be given in Kelvins.
+    temperature : float or `astropy.units.quantity.Quantity`
+        Photospheric temperature of the object. If floats are provided the
+        values are assumed to be in the unit of `Kelvin`.
 
     radius : float or `astropy.units.quantity.Quantity`
         Radius of the photosphere. If float is provided it will be assumed to
-        be in units of cm. Alternatively an astropy.units.quantity.Quantity
+        be in unit of `cm`. Alternatively an astropy.units.quantity.Quantity
         can be passed which will be internally converted into the correct units
 
     redshift : float, optional
         Redshift at which to place the object. Default assumes restframe (z=0)
 
     wavelength : array-like, optional
-        Wavelength at which the Planck function is to be evaluated.
-        If no input is provided, the default will be set to a range of
-        1000A - 10000A
+        Wavelength at which the Planck function is to be evaluated. Can be
+        given as an array of floats or `astropy.units.quantity.Quantity`. If no
+        input is provided, the default will be set to a range of 3000A - 10000A
     """
     def __init__(self, tempeture, radius, redshift=0, wavelength=None):
         if tempeture != u.quantity.Quantity:
@@ -43,10 +44,12 @@ class BlackbodySED(Spectrum):
                 raise ValueError('Radius must be a float or astropy.units')
 
         if wavelength is None:
-            wavelength = np.arange(1000, 10000, 10, dtype=float) * u.Angstrom
+            wavelength = np.arange(3000, 10000, 10, dtype=float) * u.Angstrom
         else:
-            # TODO: Tests for whether wavelength is a 1d ndarray must be done
-            pass
+            try:
+                wavelength = np.array(wavelength).astype(float) * u.Angstrom
+            except:
+                raise ValueError('Wavelength must be a numeric array')
 
         self._temperature = tempeture
         self._radius = radius
@@ -59,7 +62,18 @@ class BlackbodySED(Spectrum):
 
     def compute_blackbody(self):
         """
-        DOC THIS!
+        Compute the Planck function for an astronomical object at restframe
+
+        Calculated a blackbody SED in an astronomical context for an object
+        placed at 10pc (internal distance at z=0). All internal calculations
+        are performed in SI units using the astropy.units and astropy.constants
+        libraries for consistancy.
+
+        Returns
+        -------
+        sed : np.array of `astropy.units.quantity.Quantity`
+            Return an array of fluxes for corresponding input wavelength values
+            in the units of `erg/s/c^2/A` using the astropy.units library
         """
         sed = np.zeros(self._input_wav.size)
         sed = 2.0 * const.h * np.pi * const.c**2 / self._input_wav**5
