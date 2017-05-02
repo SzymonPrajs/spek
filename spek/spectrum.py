@@ -216,3 +216,30 @@ class Spectrum():
                                 filters[flt].ab_zero_point)
 
         return synthetic_mag
+
+    def compute_colour_correction(self, observed_filter, referenceframe_filter,
+                                  filters, redshift=0):
+        """
+        Compute K-correction from a spectrum
+
+        Calculates the k-correction term between an observed filter specified
+        in the input and a filter at a reference frame. If the redshift of the
+        reference frame is not specifies the code assumes restframe (z=0).
+
+        Parameters
+        ----------
+        observed_filter : str
+            Name of the filter in observer frame that will be k-corrected to
+            the reference frame
+        referenceframe_filter : str
+            Reference frame filter at which we want to place the spectrum
+        redshift : float, optional
+            redhsift of the reference frame. If not set it will default to z=0
+
+        Returns
+        kcorr : float
+            k-correction between the input and output filter at the new
+            redshift.
+        """
+        pass
+        # TODO: This needs to be inplemented
