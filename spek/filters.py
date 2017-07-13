@@ -72,7 +72,7 @@ class Filters():
         """
         `Official` access point for indivisual filter
 
-        For ease and readibility the __getitem__ method was overwritten to
+        For ease and readability the __getitem__ method was overwritten to
         returns an object of the class _Filter after checking if a given
         filter has been loaded. This is safer than the accessing the
         Filters.filters dictionary dirrectly however it is marginally slower.
@@ -99,7 +99,7 @@ class Filters():
 
     def make_filter_list(self):
         """
-        Scan though the filter_drectory and sets the internal list of filter
+        Scan though the filter directory and sets the internal list of filter
         responces that can be later loaded using the load_filters method.
         """
         self.__path_list = np.array(glob.glob(self._filter_directory+'/*.dat'))
